@@ -41,7 +41,7 @@ class PostSerializer(serializers.ModelSerializer):
         slug_field='username',
         default=serializers.CurrentUserDefault()
     )
-    image = Base64ImageField(required=False, allow_null=True) 
+    image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Post
@@ -49,15 +49,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         msg = "Вы уже создали пост с таким содержанием!"
 
-        validators = unique_fields(Post, 'text', 'author', msg)
-
-    def update(self, instance, validated_data):
-        instance.text = validated_data.get('text', instance.text)
-        instance.group = validated_data.get('group', instance.group)
-        instance.image = validated_data.get('image', instance.image)
-
-        instance.save()
-        return instance
+        #validators = unique_fields(Post, 'text', 'author', msg)
 
 
 class GroupSerializer(serializers.ModelSerializer):
@@ -99,3 +91,14 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = ('user', 'following')
+
+        msg = "Вы уже подписаны на этого автора!"
+
+        validators = unique_fields(Follow, 'user', 'following', msg)
+
+    def validate(self, data):
+        if self.context['request'].user == data['following']:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя!'
+            )
+        return data

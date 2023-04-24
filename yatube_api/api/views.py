@@ -1,7 +1,9 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, permissions
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import viewsets, permissions, filters
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.exceptions import PermissionDenied
+
+from django_filters.rest_framework import DjangoFilterBackend
 
 
 from posts.models import Group, Post, Comment, User, Follow
@@ -19,7 +21,8 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.select_related('author').all()
     serializer_class = PostSerializer
-    pagination_class = PageNumberPagination
+    pagination_class = LimitOffsetPagination
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
@@ -66,11 +69,15 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class FollowViewSet(viewsets.ModelViewSet):
-    queryset = Follow.objects.all()
+    queryset = Follow.objects.select_related('user')
     serializer_class = FollowSerializer
     permission_classes = (permissions.IsAuthenticated,)
 
-    def perform_create(self, serializer, *args, **kwargs):
-        #if self.request.user == self.get_object().following:
-            #raise PermissionDenied('Нельзя подписаться на самого себя!')
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    search_fields = ('following__username',)
+
+    def get_queryset(self, *args, **kwargs):
+        return Follow.objects.all().filter(user=self.request.user)
+
+    def perform_create(self, serializer):
         serializer.save(user=self.request.user)

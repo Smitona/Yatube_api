@@ -22,22 +22,19 @@ class Post(models.Model):
     text = models.TextField(verbose_name='Содержание поста')
     group = models.ForeignKey(Group, verbose_name='Группа поста',
                               blank=True,
-                              null=True,
                               on_delete=models.SET_NULL,
+                              null=True,
                               related_name='posts')
     image = models.ImageField(
         verbose_name='Изображение',
         upload_to='posts/images/',
-        null=True, default=None
+        default=None
     )
     pub_date = models.DateTimeField(verbose_name='Дата создания поста',
                                     auto_now_add=True)
 
     def __str__(self):
         return self.text[:15]
-
-    class Meta:
-        ordering = ['-pub_date']
 
 
 class Comment(models.Model):

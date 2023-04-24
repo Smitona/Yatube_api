@@ -158,6 +158,9 @@ class TestPostAPI:
                     f' В процессе выполнения запроса произошла ошибка: {error}'
                 )
             )
+        
+        print(response.status_code)
+
         assert response.status_code == HTTPStatus.CREATED, assert_msg
         post_count += 1
 
