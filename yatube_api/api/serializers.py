@@ -49,7 +49,7 @@ class PostSerializer(serializers.ModelSerializer):
 
         msg = "Вы уже создали пост с таким содержанием!"
 
-        #validators = unique_fields(Post, 'text', 'author', msg)
+        # validators = unique_fields(Post, 'text', 'author', msg)
 
 
 class GroupSerializer(serializers.ModelSerializer):
