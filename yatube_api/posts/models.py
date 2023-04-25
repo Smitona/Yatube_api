@@ -59,3 +59,9 @@ class Follow(models.Model):
     following = models.ForeignKey(User, verbose_name='Автор',
                                   on_delete=models.CASCADE,
                                   related_name='following')
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["user", "following"],
+                                    name="unique_follow"),
+        ]
