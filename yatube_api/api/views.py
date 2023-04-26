@@ -5,12 +5,12 @@ from rest_framework.pagination import LimitOffsetPagination
 from django_filters.rest_framework import DjangoFilterBackend
 
 
-from posts.models import Group, Post, Comment, User, Follow
+from posts.models import Group, Post, User, Follow
 from api.serializers import (
     PostSerializer, GroupSerializer, CommentSerializer,
     UserSerializer, FollowSerializer
 )
-from api.permissions import AuthorOrReadOnly, GuestReadOnly
+from api.permissions import AuthorOrReadOnly
 
 
 class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
@@ -27,15 +27,11 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.select_related('author').all()
     serializer_class = PostSerializer
     pagination_class = LimitOffsetPagination
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          AuthorOrReadOnly,)
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
-
-    def get_permissions(self):
-        if self.action in ['retrieve', 'list']:
-            return (GuestReadOnly(),)
-        return super().get_permissions()
 
 
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
@@ -44,19 +40,14 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    permission_classes = (AuthorOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,
+                          AuthorOrReadOnly,)
 
     def get_queryset(self, *args, **kwargs):
         post_id = self.kwargs.get("post_id")
         post = get_object_or_404(Post, id=post_id)
-        return post.comments
-
-    def get_permissions(self):
-        if self.action in ['retrieve', 'list']:
-            return (GuestReadOnly(),)
-        return super().get_permissions()
+        return post.comments.select_related('author')
 
     def perform_create(self, serializer):
         post_id = self.kwargs.get("post_id")

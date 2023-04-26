@@ -7,12 +7,6 @@ from django.core.files.base import ContentFile
 
 from posts.models import Post, Group, Comment, User, Follow
 
-from rest_framework import mixins
-
-
-class CreateListViewSet(mixins.CreateModelMixin, mixins.ListModelMixin):
-    pass
-
 
 class Base64ImageField(serializers.ImageField):
     def to_internal_value(self, data):
